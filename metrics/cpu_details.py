@@ -4,7 +4,7 @@ from datetime import timedelta
 
 def cpu_usage():
     return {
-        "usage": psutil.cpu_percent(),
+        "usage": psutil.cpu_percent(interval=None),
         "cores": psutil.cpu_count(logical=False),
         "logical_cores": psutil.cpu_count(logical=True)
     }
