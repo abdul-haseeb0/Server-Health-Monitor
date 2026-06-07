@@ -1,7 +1,7 @@
-from metrics.cpu_details import cpu_usage
-from metrics.cpu_details import uptime
+from metrics.cpu_details import cpu_usage, uptime
 from metrics.memory_details import memory_usage
 from metrics.disk_details import disk_usage
+from metrics.network_details import speed_info, network_info
 import pyfiglet
 from colorama import Fore
 
@@ -53,6 +53,35 @@ def print_disk():
         )
 
     return output
+
+def get_network_details():
+    network_list = network_info()
+    output = "Network Details\n\n"
+
+    for network in network_list:
+
+        ipv4_val = network['ipv4'][0]['address'] if network['ipv4'] else "N/A"
+        ipv6_val = network['ipv6'][0]['address'] if network['ipv6'] else "N/A"
+
+        output += (
+            f"Interface:        {network['interface']}\n"
+            f"Is Up:            {network['is_up']}\n"
+            f"Max Speed:        {network['max_speed_mbps']} Mbps\n"  # Note: matched key name from previous code
+            f"IPv4 Address:     {ipv4_val}\n"
+            f"IPv6 Address:     {ipv6_val}\n"
+            f"{'-' * 30}\n"  # Separator line between interfaces
+        )
+
+    return output
+
+
+def get_speed():
+    display_speed = speed_info()
+    return (
+        "Network Speed\n\n"
+        f"Download Speed:        {display_speed['download_speed']:.2f} Mbps\n"
+        f"Upload Speed:        {display_speed['upload_speed']:.2f} Mbps"
+    )
 
 def header_banner():
     banner = pyfiglet.figlet_format("Server Health Monitor")

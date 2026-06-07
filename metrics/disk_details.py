@@ -1,4 +1,7 @@
 import psutil
+from utils.logs_config import get_logger
+
+logger = get_logger()
 
 GB = 1024 ** 3
 
@@ -34,6 +37,7 @@ def disk_usage():
             })
 
         except (PermissionError, FileNotFoundError):
+            logger.error(f"Unable to access {partition.mountpoint}")
             continue
 
     return usage_data
