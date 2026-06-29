@@ -2,13 +2,12 @@ from metrics.cpu_details import cpu_usage, uptime
 from metrics.memory_details import memory_usage
 from metrics.disk_details import disk_usage
 from metrics.network_details import speed_info, network_info
-import pyfiglet
-from colorama import Fore
+
 
 def print_cpu():
     display_cpu = cpu_usage()
     return (
-        "CPU\n\n"
+        "CPU ↴\n\n"
         f"Usage:                    {display_cpu['usage']}%\n"
         f"Cores:                    {display_cpu['cores']}\n"
         f"Logical Processors:       {display_cpu['logical_cores']}"
@@ -29,7 +28,7 @@ def print_uptime():
 def print_memory():
     display_memory = memory_usage()
     return (
-        "Memory\n\n"
+        "Memory ↴\n\n"
         f"Usage:        {display_memory['usage']}%\n"
         f"Total:        {display_memory['total']:.2f} GB\n"
         f"Available:    {display_memory['available']:.2f} GB\n"
@@ -40,7 +39,7 @@ def print_memory():
 def print_disk():
     display_disks = disk_usage()
 
-    output = "Disk Usage Info\n"
+    output = "Disk Usage Info ↴\n"
 
     for disk in display_disks:
         output += (
@@ -78,11 +77,7 @@ def get_network_details():
 def get_speed():
     display_speed = speed_info()
     return (
-        "Network Speed\n\n"
+        " Speed\n\n"
         f"Download Speed:        {display_speed['download_speed']:.2f} Mbps\n"
         f"Upload Speed:        {display_speed['upload_speed']:.2f} Mbps"
     )
-
-def header_banner():
-    banner = pyfiglet.figlet_format("Server Health Monitor")
-    return Fore.CYAN + banner

@@ -1,14 +1,16 @@
-from metrics.displaying_data import print_cpu,print_uptime,print_memory,print_disk,get_network_details,get_speed,header_banner
+from metrics.displaying_data import print_cpu,print_uptime,print_memory,print_disk,get_network_details,get_speed
 from utils.logs_config import get_logger
 from rich.live import Live
+from utils.banner import shm_banner
+from colorama import Fore, Style
 import time
 
 logger = get_logger()
 
 
 def main():
-    print(header_banner())
-    print("Live System Resource Usage\n")
+    shm_banner()
+    print(Fore.MAGENTA, "[•] System Resource Usage\n", Style.RESET_ALL)
     logger.info(f"Starting Server Health Monitor\n...")
 
     try:
