@@ -4,17 +4,20 @@ from rich.columns import Columns
 from rich.console import Group
 from rich.align import Align
 from rich.text import Text
-
+from rich.layout import Layout
+from rich.progress_bar import ProgressBar
 from metrics.displaying_data import collect_dashboard_data
-from utils.banner import shm_banner
 
 
 def usage_color(percent):
-    if percent >= 80:
-        return "red"
-    elif percent >= 60:
-        return "yellow"
-    return "green"
+    if percent <= 50:
+        r = int(255 * percent / 50)
+        g = 255
+    else:
+        r = 255
+        g = int(255 * (100 - percent) / 50)
+
+    return f"#{r:02X}{g:02X}00"
 
 
 def build_dashboard():
@@ -36,7 +39,7 @@ def build_dashboard():
     header = Panel(
         Group(
             Align.center(Text("SERVER HEALTH MONITOR", style="bold cyan")),
-            Align.center(Text(f"System Uptime : {days}d {hours}h {minutes}m {seconds}s", style="bold green")),
+            Align.center(Text(f"\nSystem Uptime : {days}d {hours}h {minutes}m {seconds}s", style="bold green")),
         ),
         border_style="cyan",
     )
@@ -44,18 +47,38 @@ def build_dashboard():
     # ---------------- CPU ---------------- #
 
     cpu_table = Table.grid(padding=(0, 1))
-    cpu_table.add_row("Usage", f"[{usage_color(cpu['usage'])}]{cpu['usage']}%[/]")
-    cpu_table.add_row("Cores", str(cpu["cores"]))
-    cpu_table.add_row("Threads", str(cpu["logical_cores"]))
+    cpu_table.add_row(
+        "Usage",
+        ProgressBar(
+            total=100,
+            completed=cpu["usage"],
+            complete_style=usage_color(cpu["usage"]),
+            finished_style=usage_color(cpu["usage"]),
+        ),
+        " ",
+        f"[{usage_color(cpu['usage'])}]{cpu['usage']:.1f}%[/]"
+    )
+    cpu_table.add_row("Cores       ", str(cpu["cores"]))
+    cpu_table.add_row("Threads     ", str(cpu["logical_cores"]))
 
     cpu_panel = Panel(cpu_table, title="🖥 CPU", border_style="bright_blue")
 
     # ---------------- Memory ---------------- #
 
     mem_table = Table.grid(padding=(0, 1))
-    mem_table.add_row("Usage", f"[{usage_color(mem['usage'])}]{mem['usage']}%[/]")
-    mem_table.add_row("Total", f"{mem['total']:.2f} GB")
-    mem_table.add_row("Available", f"{mem['available']:.2f} GB")
+    mem_table.add_row(
+        "Usage",
+        ProgressBar(
+            total=100,
+            completed=mem["usage"],
+            complete_style=usage_color(mem["usage"]),
+            finished_style=usage_color(mem["usage"])
+        ),
+        " ",
+        f"[{usage_color(mem['usage'])}]{mem['usage']}%[/]"
+    )
+    mem_table.add_row("Total       ", f"{mem['total']:.2f} GB")
+    mem_table.add_row("Available   ", f"{mem['available']:.2f} GB")
 
     mem_panel = Panel(mem_table, title="💾 Memory", border_style="magenta")
 
@@ -82,25 +105,47 @@ def build_dashboard():
 
     # ---------------- Network ---------------- #
 
-    net_table = Table.grid()
+    # Show only active interfaces (except loopback)
+    active_nets = [
+        net for net in nets
+        if net["is_up"] and not net["interface"].lower().startswith("loopback")
+    ]
 
-    for net in nets:
+    # If none are active, show all interfaces
+    if not active_nets:
+        active_nets = nets
+
+    net_table = Table(expand=True, show_header=True)
+
+    net_table.add_column("Interface", style="cyan", overflow="fold")
+    net_table.add_column("IPv4", style="green")
+    net_table.add_column("Speed", justify="right")
+    net_table.add_column("Status", justify="center")
+
+    for net in active_nets:
         ipv4 = net["ipv4"][0]["address"] if net["ipv4"] else "N/A"
 
-        net_table.add_row("Interface", net["interface"])
-        net_table.add_row("Status", "UP" if net["is_up"] else "DOWN")
-        net_table.add_row("IPv4", ipv4)
-        net_table.add_row("Speed", f"{net['max_speed_mbps']} Mbps")
-        net_table.add_row("", "")
+        status = "[green]UP[/]" if net["is_up"] else "[red]DOWN[/]"
 
-    net_panel = Panel(net_table, title="🌐 Network", border_style="yellow")
+        net_table.add_row(
+            net["interface"],
+            ipv4,
+            f"{net['max_speed_mbps']} Mbps",
+            status,
+        )
+
+    net_panel = Panel(
+        net_table,
+        title="🌐 Network",
+        border_style="yellow",
+    )
 
     # ---------------- Speed ---------------- #
 
     speed_table = Table.grid()
 
-    speed_table.add_row("Download", f"{speed['download_speed']:.2f} Mbps")
-    speed_table.add_row("Upload", f"{speed['upload_speed']:.2f} Mbps")
+    speed_table.add_row("Download   ", f"{speed['download_speed']:.2f} Mbps")
+    speed_table.add_row("Upload     ", f"{speed['upload_speed']:.2f} Mbps")
 
     speed_panel = Panel(speed_table, title="⚡ Internet Speed", border_style="bright_magenta")
 
@@ -108,10 +153,32 @@ def build_dashboard():
         Text("Refresh: 1 sec   |   Press CTRL+C to Exit", style="dim")
     )
 
-    return Group(
-        header,
-        Columns([cpu_panel, mem_panel], equal=True, expand=True),
-        disk_panel,
-        Columns([net_panel, speed_panel], equal=True, expand=True),
-        footer,
+    layout = Layout()
+
+    # Main layout
+    layout.split_column(
+        Layout(header, size=5),
+        Layout(name="body"),
+        Layout(footer, size=1),
     )
+
+    # Split body into left and right sections
+    layout["body"].split_row(
+        Layout(name="left", ratio=2),
+        Layout(name="right", ratio=1),
+    )
+
+    # Left side: Disk above Network
+    layout["left"].split_column(
+        Layout(disk_panel, ratio=2),
+        Layout(net_panel, ratio=2),
+    )
+
+    # Right side: CPU, Memory, Speed stacked vertically
+    layout["right"].split_column(
+        Layout(cpu_panel, size=6),
+        Layout(mem_panel, size=5),
+        Layout(speed_panel, size=4),
+    )
+
+    return layout
