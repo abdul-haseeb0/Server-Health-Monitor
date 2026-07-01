@@ -176,7 +176,7 @@ def build_dashboard():
 
     # Right side: CPU, Memory, Speed stacked vertically
     layout["right"].split_column(
-        Layout(cpu_panel, size=6),
+        Layout(cpu_panel, size=5),
         Layout(mem_panel, size=5),
         Layout(speed_panel, size=4),
     )
