@@ -24,7 +24,7 @@ Built for developers and sysadmins who want fast, readable system visibility dur
 | 🌐 **Network Interfaces** | Live table of interfaces with IPv4 address, link speed, and status (UP/DOWN) |
 | 🚀 **Internet Speed Test** | Real-time download and upload throughput (Mbps) |
 | ⏱️ **System Uptime** | Displayed prominently in the dashboard header |
-| 🔄 **Live Refresh** | Smooth, flicker-free updates every second via `rich.live` |
+| 🔄 **Live Refresh** | Smooth, flicker-free updates every 2 second via `rich.live` |
 | 🎨 **Color-Coded Panels** | Distinct panel colors for CPU, Memory, Disk, Network, and Speed at a glance |
 | 🔧 **Zero Configuration** | No config files, environment variables, or setup wizards |
 | 🛡️ **Graceful Error Handling** | Skips inaccessible or permission-restricted partitions/interfaces cleanly |
@@ -61,7 +61,7 @@ The dashboard renders as a bordered, color-coded layout with a header banner, a 
 │ Ethernet 3    192.168.56.1      1000 Mbps     UP                           │
 │ Wi-Fi         192.168.0.101     144 Mbps      UP                           │
 └────────────────────────────────────────────────────────────────────────────┘
-                     Refresh: 1 sec   |   Press CTRL+C to Exit
+                     Refresh: 2 sec   |   Press CTRL+C to Exit
 ```
 
 ---
@@ -98,7 +98,7 @@ pip install -r requirements.txt
 python3 main.py
 ```
 
-The dashboard launches instantly and begins refreshing automatically every second. Press **Ctrl+C** to exit cleanly.
+The dashboard launches instantly and begins refreshing automatically every 2 second. Press **Ctrl+C** to exit cleanly.
 
 ---
 
